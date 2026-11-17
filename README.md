@@ -1,4 +1,8 @@
-# SHITTOWN, KENTUCKY
+# SHITTOWN
+
+**Play online: https://kelllar.github.io/shittown/**  
+**Source: https://github.com/kelllar/shittown**
+
 
 A single-player, browser-based, PS2-era first-person sandbox about bad decisions.
 Postal 2 energy with Saints Row / GTA structure and a run-down 2000s mall town.

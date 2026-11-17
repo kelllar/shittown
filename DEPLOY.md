@@ -1,5 +1,9 @@
 # Shipping SHITTOWN
 
+**Status: live at https://kelllar.github.io/shittown/ via GitHub Pages
+(workflow build). The repo is public because GitHub Free does not publish Pages
+from private repositories.**
+
 The game is a static site. `python3 tools/build_site.py` produces `site/` with
 `index.html`, `404.html`, and `assets/`.
 
