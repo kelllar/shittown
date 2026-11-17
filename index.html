@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SHITTOWN</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="fx-scanlines"></div>
+<div id="fx-vignette"></div>
+<div id="fx-high"></div>
+<div id="speedlines"></div>
+<div id="fx-gore"></div>
+
+<!-- ============ HUD ============ -->
+<div id="hud" class="hidden">
+  <div id="hud-left">
+    <div class="meter health">
+      <span class="meter-label">HEALTH</span>
+      <div class="bar"><div id="hud-health" class="fill health"></div></div>
+    </div>
+    <div class="meter drunk">
+      <span class="meter-label">DRUNK</span>
+      <div class="bar"><div id="hud-drunk" class="fill drunk"></div></div>
+    </div>
+    <div class="meter high">
+      <span class="meter-label">HIGH</span>
+      <div class="bar"><div id="hud-high" class="fill high"></div></div>
+    </div>
+    <div class="meter bladder">
+      <span class="meter-label">BLADDER</span>
+      <div class="bar"><div id="hud-bladder" class="fill bladder"></div></div>
+    </div>
+    <div id="hud-cash">$20</div>
+    <div id="online-status" class="hidden">ONLINE</div>
+  </div>
+
+  <div id="hud-right">
+    <div id="hud-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+    <div id="hud-rankline">
+      <span id="hud-rank">LOSER</span>
+      <span id="hud-respect-val">0</span>
+    </div>
+    <div class="bar small"><div id="hud-respect-fill" class="fill respect"></div></div>
+    <div id="ticker"></div>
+  </div>
+
+  <div id="crosshair">+</div>
+  <div id="hitmarker">×</div>
+  <div id="prompt" class="hidden"></div>
+  <div id="subtitle"></div>
+  <div id="fps"></div>
+  <div id="item-hint"></div>
+  <div id="radar-wrap"><canvas id="radar" width="160" height="160"></canvas><div id="radar-clock">00:00</div></div>
+  <div id="keybinds">
+    <span><b>WASD</b> MOVE</span><span><b>SPACE</b> JUMP</span><span><b>LMB</b> PUNCH / SWIG / DRAG</span><span><b>RMB</b> CLAW</span>
+    <span><b>E</b> USE / DRIVE</span><span><b>1–5</b> WEAPONS</span><span><b>F</b> BEER</span><span><b>B</b> WEED</span>
+    <span><b>V</b> VAPE</span><span><b>R</b> PEE</span><span><b>T</b> PHONE</span><span><b>Z</b> CAMERA</span><span><b>Y</b> CHAT</span>
+  </div>
+  <div id="objective" class="hidden"><span id="objective-label">OBJECTIVE</span><span id="objective-text"></span><span id="objective-dist"></span></div>
+  <div id="tutorial" class="hidden">
+    <div id="tutorial-head">HOW TO SHITTOWN <span id="tutorial-step">1/7</span></div>
+    <div id="tutorial-text">WASD to move.</div>
+    <div id="tutorial-skip">T → GUIDE to skip</div>
+  </div>
+  <div id="weapon-hud"><span id="weapon-name">FISTS</span><span id="weapon-ammo"></span></div>
+  <div id="radio-display"><span class="radio-tag">RADIO</span><span id="radio-station">—</span></div>
+</div>
+
+<!-- ============ BOOT / TITLE ============ -->
+<div id="boot">
+  <div class="boot-inner">
+    <div class="boot-presents">LARD ASS GAMES™ presents</div>
+    <div class="boot-warning">WARNING</div>
+    <p class="boot-warn-body">This game contains: strong language, drinking, gambling, property damage,
+      terrible people, and zero personal growth. It is a work of fiction. Mostly.</p>
+    <h1 class="boot-title">SHITTOWN<span class="tm">™</span></h1>
+    <div class="boot-sub">A GAME ABOUT BAD DECISIONS · STARRING SHITASS</div>
+    <button id="boot-start">START GAME</button>
+    <div class="boot-tip" id="boot-tip">Tip: everything that isn't bolted down can be thrown. Everything that is bolted down can be unbolted with enough violence.</div>
+    <div class="boot-controls">
+      <div><b>WASD</b> move</div><div><b>MOUSE</b> look</div>
+      <div><b>SHIFT</b> sprint</div><div><b>SPACE</b> jump</div>
+      <div><b>LMB</b> punch / swing</div><div><b>RMB</b> claw grab / launch</div>
+      <div><b>E</b> interact / use</div><div><b>F</b> drink beer</div>
+      <div><b>R</b> pee (puts out fires)</div><div><b>C</b> smoke a dart</div>
+      <div><b>B</b> smoke weed</div><div><b>V</b> vape</div>
+      <div><b>G</b> squeaky chicken</div><div></div>
+      <div><b>T</b> pull out phone</div><div><b>M</b> skip radio station</div>
+      <div><b>Q</b> kick</div><div><b>1–5</b> switch weapons</div>
+      <div><b>Z</b> third person</div><div><b>F1</b> guide</div>
+      <div><b>F1</b> open guide</div><div><b>L</b> mute all audio</div>
+      <div><b>ESC</b> pause</div><div></div>
+    </div>
+    <div class="boot-foot">SINGLE PLAYER · NO PLOT · NO HEROES · RUNS OFFLINE</div>
+    <div class="boot-audio">SOUNDTRACK OFF BY DEFAULT · ESC → SOUNDTRACK ON · T → RADIO</div>
+    <div class="boot-load">MEMORY CARD (8MB) DETECTED<span class="blink">_</span></div>
+    <div class="boot-rating"><span class="rating-box">M</span><span>MATURE 17+<br>BLOOD · GORE · BAD WORDS</span></div>
+  </div>
+</div>
+
+<!-- ============ PAUSE ============ -->
+<div id="pause" class="overlay hidden">
+  <div class="panel sa-panel">
+    <div class="sa-menu">
+      <div class="sa-brand">SHITTOWN</div>
+      <h2>PAUSED</h2>
+      <div class="pause-sub">SINGLE PLAYER · NO HEROES</div>
+      <button id="pause-resume" class="sa-item primary">RESUME</button>
+      <button id="audio-toggle" class="sa-item">AUDIO: ON</button>
+      <button id="music-toggle" class="sa-item">SOUNDTRACK: OFF</button>
+      <button id="pause-quit" class="sa-item danger">QUIT TO TITLE</button>
+      <div class="sa-menu-foot">LARD ASS GAMES · 2004</div>
+    </div>
+    <div class="sa-options">
+      <div class="sa-section">OPTIONS</div>
+      <div class="settings">
+        <label>MASTER VOLUME <input id="set-master" type="range" min="0" max="100" value="80"></label>
+        <label>SOUNDTRACK <input id="set-music" type="range" min="0" max="100" value="70"></label>
+        <label>MOUSE SPEED <input id="set-mouse" type="range" min="1" max="30" value="12"></label>
+        <label>GRAPHICS <select id="set-quality">
+          <option value="low">PS1 (240p)</option>
+          <option value="medium">PS2 (360p)</option>
+          <option value="high" selected>PS2 HQ (540p)</option>
+        </select></label>
+      </div>
+      <div class="sa-section">CONTROLS</div>
+      <div class="pause-controls">
+        WASD move · SHIFT sprint · SPACE jump · LMB attack · RMB claw · E use/drive<br>
+        F beer · B weed · V vape · R hold pee · C cigs · X extinguisher · H water<br>
+        G chicken · T phone · Z camera · E drive · F1 guide · M radio · 1–5 weapons · Q kick · ESC pause
+      </div>
+      <div class="sa-tip">TIP: the police are not a suggestion. They are a lifestyle.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SLOT MACHINE ============ -->
+<div id="slots" class="overlay hidden">
+  <div class="panel slot-panel">
+    <h2>LUCKY PIG SLOTS</h2>
+    <div class="slot-sub">The house always wins. Unless you have a crowbar.</div>
+    <div class="slot-reels">
+      <div class="reel"><div id="reel0" class="reel-strip">7</div></div>
+      <div class="reel"><div id="reel1" class="reel-strip">7</div></div>
+      <div class="reel"><div id="reel2" class="reel-strip">7</div></div>
+    </div>
+    <div class="slot-result" id="slot-result">&nbsp;</div>
+    <div class="slot-row">
+      <div class="slot-cash">CASH <b id="slot-cash">$0</b></div>
+      <div class="slot-bet">BET <b id="slot-bet">$5</b></div>
+    </div>
+    <div class="slot-row">
+      <button id="slot-bet-down" class="btn">− BET</button>
+      <button id="slot-spin" class="btn primary">SPIN</button>
+      <button id="slot-bet-up" class="btn">+ BET</button>
+    </div>
+    <div class="slot-paytable">
+      7 7 7 = x50 · SKULL x20 · BAR x10 · BOTTLE/PIG x5 · any two = x2
+    </div>
+    <div class="slot-row">
+      <button id="slot-leave" class="btn ghost">WALK AWAY</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PHONE ============ -->
+<div id="phone" class="overlay hidden">
+  <div class="phone-shell">
+    <div class="phone-status"><span>CRACKPHONE</span><span id="phone-clock">3:14</span></div>
+    <div class="phone-screen">
+      <div id="app-home" class="phone-app">
+        <div class="phone-hello">welcome back,<br><b>degenerate</b></div>
+        <div class="app-grid">
+          <button class="app-btn" data-app="missions"><span class="app-icon missions">M</span>MISSIONS</button>
+          <button class="app-btn" data-app="shitter"><span class="app-icon shitter">S</span>SHITTER</button>
+          <button class="app-btn" data-app="cracked"><span class="app-icon cracked">C</span>CRACKED</button>
+          <button class="app-btn" data-app="wallet"><span class="app-icon wallet">$</span>WALLET</button>
+          <button class="app-btn" data-app="radio"><span class="app-icon radio">♫</span>RADIO</button>
+          <button class="app-btn" data-app="drugs"><span class="app-icon drugs">D</span>DRUGS</button>
+          <button class="app-btn" data-app="weedmap"><span class="app-icon weedmap">W</span>WEEDMAPS</button>
+          <button class="app-btn" data-app="tor"><span class="app-icon tor">T</span>ONION</button>
+          <button class="app-btn" data-app="guide"><span class="app-icon guide">?</span>GUIDE</button>
+          <button class="app-btn" data-app="ds"><span class="app-icon ds">DS</span>DOUBLE<br>SCREEN</button>
+        </div>
+        <div class="phone-hint">↑ ↓ SELECT · ENTER OPEN · ← BACK · ESC CLOSE</div>
+        <div class="phone-note">no service · 1% battery · vibes</div>
+      </div>
+      <div id="app-missions" class="phone-app hidden">
+        <div class="app-head"><button class="phone-back" data-back>◀</button><span>MISSIONS</span></div>
+        <div id="missions-body" class="phone-scroll"></div>
+      </div>
+      <div id="app-shitter" class="phone-app hidden">
+        <div class="app-head"><button class="phone-back" data-back>◀</button><span>SHITTER</span><button id="shitter-refresh" class="mini-btn">↻</button></div>
+        <div id="shitter-feed" class="phone-scroll"></div>
+      </div>
+      <div id="app-cracked" class="phone-app hidden">
+        <div class="app-head"><button class="phone-back" data-back>◀</button><span>CRACKED</span></div>
+        <div id="cracked-list" class="phone-scroll"></div>
+      </div>
+      <div id="app-wallet" class="phone-app hidden">
+        <div class="app-head"><button class="phone-back" data-back>◀</button><span>WALLET</span></div>
+        <div id="wallet-body" class="phone-scroll wallet-body"></div>
+      </div>
+      <div id="app-radio" class="phone-app hidden">
+        <div class="app-head"><button class="phone-back" data-back>◀</button><span>RADIO</span></div>
+        <div id="radio-body" class="phone-scroll radio-body"></div>
+      </div>
+      <div id="app-drugs" class="phone-app hidden">
+        <div class="app-head"><button class="phone-back" data-back>◀</button><span>DRUGS</span></div>
+        <div id="drugs-body" class="phone-scroll"></div>
+      </div>
+      <div id="app-weedmap" class="phone-app hidden">
+        <div class="app-head"><button class="phone-back" data-back>◀</button><span>WEEDMAPS</span></div>
+        <div id="weedmap-body" class="phone-scroll"></div>
+      </div>
+      <div id="app-tor" class="phone-app hidden">
+        <div class="app-head"><button class="phone-back" data-back>◀</button><span>ONION</span></div>
+        <div id="tor-body" class="phone-scroll"></div>
+      </div>
+      <div id="app-guide" class="phone-app hidden">
+        <div class="app-head"><button class="phone-back" data-back>◀</button><span>GUIDE</span></div>
+        <div id="guide-body" class="phone-scroll"></div>
+      </div>
+      <div id="app-ds" class="phone-app hidden">
+        <div class="app-head"><button class="phone-back" data-back>◀</button><span>DOUBLE SCREEN</span></div>
+        <div class="ds-wrap">
+          <canvas id="ds-canvas" width="160" height="128"></canvas>
+          <div class="ds-bar"><span id="ds-score">SNAKE · 0</span><span id="ds-hint">ARROWS / WASD</span></div>
+          <div class="ds-buttons">
+            <button class="mini-btn" data-ds="snake">SNAKE</button>
+            <button class="mini-btn" data-ds="pong">PONG</button>
+            <button id="ds-restart" class="mini-btn">RESET</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="phone-keys">WASD MOVE · LMB PUNCH · RMB CLAW · E USE · 1–5 WEAPONS · T PHONE</div>
+    <div class="phone-bottom">
+      <button id="phone-back-main" class="phone-key">◀</button>
+      <span>CRACKPHONE OS 1.0</span>
+      <button id="phone-close" class="phone-key">✕</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DEATH ============ -->
+<div id="death" class="overlay hidden">
+  <div class="panel death-panel">
+    <h2>YOU DIED</h2>
+    <div id="death-tip" class="death-tip"></div>
+    <div id="death-count" class="death-count">3</div>
+    <div class="death-sub">Respawn bill: $75. Try to be less shit at this.</div>
+  </div>
+</div>
+
+<!-- ============ CUTSCENE ============ -->
+<div id="cutscene" class="hidden">
+  <div class="cine-bar top"></div>
+  <div class="cine-bar bottom"></div>
+  <div class="cutscene-panel">
+    <div id="cutscene-title">SHITTOWN</div>
+    <div id="cutscene-text"></div>
+    <div class="cutscene-actions">
+      <button id="cutscene-next" class="btn primary">CONTINUE</button>
+      <button id="cutscene-skip" class="btn ghost">SKIP</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ONLINE CHAT ============ -->
+<div id="chat-bar" class="hidden">
+  <span>SAY:</span>
+  <input id="chat-input" maxlength="90" autocomplete="off" placeholder="talk shit across the internet">
+  <b>ENTER SEND · ESC CANCEL</b>
+</div>
+
+<!-- ============ CREDITS ============ -->
+<div id="credits" class="overlay hidden">
+  <div class="credits-inner">
+    <div class="credits-stamp">YOU BEAT THE GAME</div>
+    <div class="credits-title">SHITTOWN</div>
+    <div class="credits-sub">KENTUCKY · POP. 1,214 · PROBLEMS 0</div>
+    <div class="credits-roll">
+      <p class="big">STARRING <b>SHITASS</b></p>
+      <p>as a man who should have gone to therapy</p>
+      <p class="big">THE TOWN OF SHITTOWN</p>
+      <p>as itself, unfortunately</p>
+      <p class="big">SLICK · EARL · DAVE · THE COLONEL</p>
+      <p>and 40 citizens with no self-preservation</p>
+      <p class="big">GAME DESIGN · CODE · ART · SOUND</p>
+      <p><b>DEEPSEEK</b></p>
+      <p class="small">every texture, model, song and bad idea synthesized in the browser</p>
+      <p class="big">CREATED FOR</p>
+      <p><b>github.com/kelllar</b></p>
+      <p class="small">your GitHub · your problem now</p>
+      <p class="big">SPECIAL THANKS</p>
+      <p>caffeine, Kentucky, public-domain music, and the water tower</p>
+      <p class="big">NOBODY IS PROUD. EVERYBODY IS IMPRESSED.</p>
+      <p class="small">thanks for playing · now go outside</p>
+    </div>
+    <button id="credits-close" class="sa-item primary">BACK TO SHITTOWN</button>
+    <div class="credits-foot">LARD ASS GAMES · 2004 · STILL HERE</div>
+  </div>
+</div>
+
+<!-- ============ RANK UP ============ -->
+<div id="rankup" class="hidden">
+  <div class="rankup-label">RESPECT LEVEL UP</div>
+  <div class="rankup-name" id="rankup-name">SCUMBAG</div>
+</div>
+
+<script src="assets/vendor/three.min.js"></script>
+<script src="assets/vendor/cannon.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/jokes.js"></script>
+<script src="assets/js/audio.js"></script>
+<script src="assets/js/world.js"></script>
+<script src="assets/js/entities.js"></script>
+<script src="assets/js/player.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/multiplayer.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# build output
+site/
+
+# local junk
+__pycache__/
+*.pyc
+.DS_Store
+tests/smoke.png
+shot-*.png
+dbg-*.png
+
+# editor
+.vscode/
+.idea/
