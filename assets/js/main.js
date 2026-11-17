@@ -268,6 +268,17 @@
       this.started = true;
       this.deathHandled = false;
       this.ui.hideBoot();
+      if (this.continueStory && this.loadStory()) {
+        this.tutorial.done = true;
+        this.ui.hideTutorial();
+        this.ui.showHUD(true);
+        this.player.showPhone(false);
+        this.checkSave();
+        this.requestLock();
+        this.saveSettings();
+        return;
+      }
+      this.clearSave();
       this.ui.showHUD(true);
       this.audio.init();
       this.audio.resume();
@@ -285,6 +296,7 @@
       this.ticker("Guns: check the house and behind the bar. This is America.", "gold");
       this.tutorial.start = { x: this.player.body.position.x, z: this.player.body.position.z };
       this.ui.setObjective(this.objective);
+      this.ui.setMissionLabel("MISSION 1/9");
       this.updateStoryMarker();
       this.openCutscene("SHITTOWN", [
         "You are SHITASS. You live in Shittown, Kentucky: one dead mall, three neon signs, and a mayor who cries in public.",
@@ -376,6 +388,66 @@
       this.story.enabled = false;
       this.ui.hideTutorial();
     }
+    checkSave() {
+      let has = false;
+      try { has = !!localStorage.getItem("shittown.save.v1"); } catch (e) {}
+      this.ui.showContinue(has);
+    }
+
+    saveStory() {
+      try {
+        localStorage.setItem("shittown.save.v1", JSON.stringify({
+          stage: this.story.stage,
+          final: !!this.story.final,
+          objective: this.objective,
+          cash: Math.floor(this.player.cash),
+          respect: Math.floor(this.player.respect),
+          flags: {
+            slickMet: this.story.slickMet,
+            sold: this.story.sold || 0,
+            bouncerDown: !!this.story.bouncerDown,
+            slickDown: !!this.story.slickDown,
+            carBought: !!this.story.carBought,
+            carStolen: !!this.story.carStolen,
+            deliveryDone: !!this.story.deliveryDone,
+            hoes: this.story.hoes || 0,
+            suit: !!this.story.suit,
+            colonelDown: !!this.story.colonelDown,
+            colonelSpawned: !!this.story.colonelSpawned
+          }
+        }));
+      } catch (e) { /* private mode */ }
+      this.checkSave();
+    }
+
+    clearSave() {
+      try { localStorage.removeItem("shittown.save.v1"); } catch (e) {}
+      this.checkSave();
+    }
+
+    loadStory() {
+      let data = null;
+      try {
+        const raw = localStorage.getItem("shittown.save.v1");
+        if (raw) data = JSON.parse(raw);
+      } catch (e) { return false; }
+      if (!data || typeof data.stage !== "number") return false;
+      Object.assign(this.story, data.flags || {});
+      this.story.enabled = true;
+      this.story.stage = Math.max(0, Math.min(8, data.stage));
+      this.story.final = !!data.final;
+      this.player.cash = Math.max(this.player.cash, data.cash || 0);
+      this.player.respect = Math.max(this.player.respect, data.respect || 0);
+      this.objective = data.objective || this.getStoryMissions()[this.story.stage].obj;
+      this.ui.setObjective(this.objective);
+      this.ui.setMissionLabel("MISSION " + Math.min(this.story.stage + 1, 9) + "/9");
+      this.updateStoryMarker();
+      if (!this.story.colonelSpawned && this.story.stage >= 7) this.spawnColonel();
+      this.ticker("SAVE LOADED. Mission " + Math.min(this.story.stage + 1, 9) + ": " + this.getStoryMissions()[this.story.stage].title, "gold");
+      this.addRespect(0, null);
+      return true;
+    }
+
     _updateStory() {
       if (!this.story.enabled || this.cutsceneOpen || this.story.final) return;
       const s = this.story, p = this.player;
@@ -413,23 +485,28 @@
       if (!st.check()) return;
       s.stage += 1;
       this.ui.setObjective(st.obj);
+      this.ui.setMissionLabel("MISSION " + Math.min(s.stage + 1, 9) + "/9");
       this.updateStoryMarker();
       this.openCutscene(st.title, st.lines, () => {
         if (s.stage >= stages.length) {
           s.final = true;
           this.objective = "PIMP KING. The town is yours. You beat SHITTOWN.";
           this.ui.setObjective(this.objective);
+          this.ui.setMissionLabel("MISSION 9/9");
           this.clearMarker();
           this.addRespect(250, "bribe");
           this.ui.rankUp("PIMP KING");
           this.ticker("YOU BEAT SHITTOWN. Nobody claps. That's how you know it's real.", "gold");
           this.ticker("PIMP KING. The stable, the club, the car, the plane. All yours.", "gold");
+          this.saveStory();
           this.rollCredits();
         } else {
           this.objective = stages[s.stage].obj;
           this.ui.setObjective(this.objective);
+          this.ui.setMissionLabel("MISSION " + Math.min(s.stage + 1, 9) + "/9");
           this.updateStoryMarker();
           this.ui.missionBanner(stages[s.stage].title);
+          this.saveStory();
           if (s.stage === 7 && !s.colonelSpawned) this.spawnColonel();
         }
       });
@@ -991,6 +1068,7 @@
   function boot() {
     try {
       ST.game = new Game();
+      ST.game.checkSave();
       const params = new URLSearchParams(location.search);
       if (ST.Multiplayer && (params.get("online") === "1" || localStorage.getItem("shittown.online") === "1")) {
         ST.mp = new ST.Multiplayer(ST.game);

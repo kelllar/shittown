@@ -32,7 +32,7 @@
         cutscene: $("cutscene"), cutTitle: $("cutscene-title"), cutText: $("cutscene-text"),
         cutNext: $("cutscene-next"), cutSkip: $("cutscene-skip"),
         objective: $("objective"), objectiveText: $("objective-text"), objectiveDist: $("objective-dist"),
-        missionsBody: $("missions-body"),
+        missionsBody: $("missions-body"), objectiveMission: $("objective-mission"),
         radar: $("radar"), radarClock: $("radar-clock"), gore: $("fx-gore"),
         dsCanvas: $("ds-canvas"), dsScore: $("ds-score"), dsHint: $("ds-hint"),
         boot: $("boot"), bootTip: $("boot-tip"),
@@ -63,7 +63,9 @@
     }
 
     bind() {
-      $("boot-start").addEventListener("click", () => this.game.start());
+      $("boot-start").addEventListener("click", () => { this.game.continueStory = false; this.game.start(); });
+      const cont = $("boot-continue");
+      if (cont) cont.addEventListener("click", () => { this.game.continueStory = true; this.game.start(); });
       $("cutscene-next").addEventListener("click", () => this.nextCutscene());
       $("cutscene-skip").addEventListener("click", () => this.skipCutscene());
       $("pause-resume").addEventListener("click", () => this.game.resume());
@@ -763,6 +765,10 @@
       }
     }
 
+    setMissionLabel(text) {
+      if (this.el.objectiveMission) this.el.objectiveMission.textContent = text || "";
+    }
+
     setObjective(text) {
       if (!this.el.objective) return;
       this.el.objective.classList.toggle("hidden", !text);
@@ -943,6 +949,11 @@
     }
 
     /* ---------------- screens ---------------- */
+    showContinue(show) {
+      const el = $("boot-continue");
+      if (el) el.classList.toggle("hidden", !show);
+    }
+
     hideBoot() {
       this.el.boot.classList.add("hidden");
       this.showHUD(true);
