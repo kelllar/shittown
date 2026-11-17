@@ -1,0 +1,9 @@
+[build]
+  command = "python3 tools/build_site.py"
+  publish = "site"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
